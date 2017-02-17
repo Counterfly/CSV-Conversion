@@ -102,12 +102,17 @@ if __name__ == '__main__':
       print(root)
       csv_files = [x for x in files if os.path.splitext(x)[1] == '.csv']
       if len(csv_files) > 0:
+        domain = None
         # TODO: make this more automatic, hackish
         for domain_key in columns_to_keep.keys():
           if domain_key in csv_files[0]:
             domain = domain_key
             break
 
-        print("  " + ','.join(csv_files))
-        convert_csv_to_latex([ os.path.join(root, x) for x in csv_files], DELIMETER, column_headers_to_keep=columns_to_keep[domain], aggregate_tables=False)
+        if domain is not None:
+          print('Keeping a subsect of specified columns')
+          convert_csv_to_latex([ os.path.join(root, x) for x in csv_files], DELIMETER, column_headers_to_keep=columns_to_keep[domain], aggregate_tables=False)
+        else:
+          print('Keeping all columns')
+          convert_csv_to_latex([ os.path.join(root, x) for x in csv_files], DELIMETER, aggregate_tables=False)
 
