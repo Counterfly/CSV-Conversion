@@ -19,7 +19,7 @@ DELIMETER = '\s+'
 
 
 
-def convert_csv_to_latex(csv_ordered_files, delimeter, column_headers_to_keep=None, aggregate_tables=False):
+def convert_csv_to_latex(csv_ordered_files, delimeter, columns_to_keep=None, aggregate_tables=False):
   '''
   csv_ordered_files: csv files to convert to another table format
   delimeter: delimeter used within the csv files
@@ -51,7 +51,10 @@ def convert_csv_to_latex(csv_ordered_files, delimeter, column_headers_to_keep=No
       csv_file.seek(0)  # Reset to Start of file
       # Read file as csv and add to output
       data_frame = pd.read_csv(csv_file, sep=delimeter, index_col=0)
-      output.add_data(table_name, data_frame)
+      if not columns_to_keep:
+        columns_to_keep = list(df)
+
+      output.add_data(table_name, data_frame.loc[:, columns_to_keep])
 
     #with open(csv_filepath, 'r') as csv_file:
     #  print(csv_file)
@@ -85,10 +88,10 @@ def convert_csv_to_latex(csv_ordered_files, delimeter, column_headers_to_keep=No
 
 # TODO: want to automate this eventually with representative sets
 # This is the part that requires too much human intervention
-columns_to_keep = {
+column_headers = {
     'blocks': ['BFS', 'BFS_DD', 'LUBY', 'EXP', 'PROB0.2'],
     'grid': ['BFS', 'BFS_DD', 'LUBY', 'EXP', 'PROB0.2'],
-    'gripper': ['BFS', 'BFS_DD', 'LUBY', 'EXP', 'PROB0.05'],
+    'gripper': ['BFS', 'BFS_DD', 'LUBY', 'EXP', 'PROB0.2'], #'PROB0.05'],
     'rovers': ['BFS', 'BFS_DD', 'LUBY', 'EXP', 'PROB0.2']
 }
 
@@ -99,20 +102,19 @@ if __name__ == '__main__':
   directory_or_file = sys.argv[1]
   if os.path.isdir(directory_or_file):
     for root,_,files in os.walk(directory_or_file):
-      print(root)
       csv_files = [x for x in files if os.path.splitext(x)[1] == '.csv']
       if len(csv_files) > 0:
         domain = None
         # TODO: make this more automatic, hackish
-        for domain_key in columns_to_keep.keys():
-          if domain_key in csv_files[0]:
+        for domain_key in column_headers.keys():
+          if domain_key in root:
             domain = domain_key
             break
 
         if domain is not None:
-          print('Keeping a subsect of specified columns')
-          convert_csv_to_latex([ os.path.join(root, x) for x in csv_files], DELIMETER, column_headers_to_keep=columns_to_keep[domain], aggregate_tables=False)
+          print('Keeping a subset of specified columns')
+          convert_csv_to_latex([ os.path.join(root, x) for x in csv_files], DELIMETER, columns_to_keep=column_headers[domain], aggregate_tables=True)
         else:
           print('Keeping all columns')
-          convert_csv_to_latex([ os.path.join(root, x) for x in csv_files], DELIMETER, aggregate_tables=False)
+          convert_csv_to_latex([ os.path.join(root, x) for x in csv_files], DELIMETER, aggregate_tables=True)
 
